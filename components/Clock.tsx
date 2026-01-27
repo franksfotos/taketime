@@ -70,11 +70,12 @@ const Clock: React.FC<ClockProps> = ({ segments, onSegmentClick, highlightedInde
                {/* Card Stack */}
                <div className="relative w-full h-full flex flex-col items-center mt-2">
                  {segment.cards.map((card, cIndex) => {
-                   // Offset logic: INCREASED offset to make values visible
-                   // Small offset when face down to save space
-                   // Large offset when face up/revealed to show value
+                   // Offset logic:
+                   // Always keep them fanned out reasonably so players can count the stack size
+                   // When revealed or face up, allow max visibility.
+                   // When hidden, still allow enough offset (30px) to distinguish individual cards.
                    const shouldShow = revealed || card.isFaceUp;
-                   const offset = shouldShow ? cIndex * 40 : cIndex * 15; 
+                   const offset = shouldShow ? cIndex * 40 : cIndex * 30; 
                    const z = cIndex;
                    
                    return (
@@ -99,12 +100,20 @@ const Clock: React.FC<ClockProps> = ({ segments, onSegmentClick, highlightedInde
                
                {/* Resolution Status */}
                {result && (
-                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] animate-bounce bg-black bg-opacity-50 rounded-full p-2">
-                       {result.passed ? (
-                           <div className="text-3xl text-green-400">✓</div>
-                       ) : (
-                           <div className="text-3xl text-red-500">✗</div>
-                       )}
+                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] animate-bounce w-full flex flex-col items-center pointer-events-none">
+                        <div className="bg-black bg-opacity-70 rounded-full p-2 mb-1">
+                            {result.passed ? (
+                                <div className="text-3xl text-green-400 leading-none">✓</div>
+                            ) : (
+                                <div className="text-3xl text-red-500 leading-none">✗</div>
+                            )}
+                        </div>
+                        {/* Show Failure Message */}
+                        {!result.passed && result.message && (
+                            <div className="bg-red-900 text-white text-[10px] px-2 py-1 rounded border border-red-500 shadow-lg text-center max-w-[120px] break-words">
+                                {result.message}
+                            </div>
+                        )}
                    </div>
                )}
 
