@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      base: '/take-time---web-edition/', // Add this line
       server: {
         port: 3000,
         host: '0.0.0.0',
