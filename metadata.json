@@ -1,0 +1,5 @@
+{
+  "name": "Take Time - Web Edition",
+  "description": "A web implementation of the cooperative card game Take Time. Solve temporal puzzles by placing cards around a clock.",
+  "requestFramePermissions": []
+}
