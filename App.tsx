@@ -653,22 +653,41 @@ const App: React.FC = () => {
   }, [phase, resolutionStep, clockSegments]);
 
   // --- Copy Helper ---
+  // Improved Robust Copy Function
   const copyToClipboard = (text: string) => {
-    if (!navigator.clipboard) {
-        const ta = document.createElement("textarea");
-        ta.value = text;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
+    const handleSuccess = () => {
         setFeedback("Copied!");
         setTimeout(() => setFeedback(""), 2000);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text)
+            .then(handleSuccess)
+            .catch((err) => {
+                console.warn("Clipboard API failed, trying fallback...", err);
+                fallbackCopy(text);
+            });
     } else {
-        navigator.clipboard.writeText(text).then(() => {
-            setFeedback("Copied!");
-            setTimeout(() => setFeedback(""), 2000);
-        });
+        fallbackCopy(text);
     }
+  };
+
+  const fallbackCopy = (text: string) => {
+      try {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.left = '-9999px';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          setFeedback("Copied!");
+          setTimeout(() => setFeedback(""), 2000);
+      } catch (e) {
+          console.error("Manual copy fallback failed", e);
+          setFeedback("Copy Failed");
+      }
   };
 
   // --- Render ---
@@ -676,7 +695,7 @@ const App: React.FC = () => {
   const myPlayer = players.find(p => p.id === myPlayerId);
   const faceUpLimit = players.length;
   const isMyTurn = players[currentPlayerIndex]?.id === myPlayerId;
-  const inviteLink = myPeerId ? `${window.location.origin}${window.location.pathname}?lobby=${myPeerId}` : '';
+  const inviteLink = myPeerId ? `${window.location.href.split('?')[0]}?lobby=${myPeerId}` : '';
 
   if (phase === ExtendedGamePhase.LOBBY) {
       return (
@@ -712,11 +731,31 @@ const App: React.FC = () => {
                               </div>
                           </div>
                           
-                          <div className="bg-black bg-opacity-30 p-4 rounded text-center">
-                              <p className="text-xs text-gray-500 uppercase mb-2">Share Link</p>
-                              <div className="flex items-center gap-2">
-                                  <input readOnly value={inviteLink} className="flex-1 bg-transparent text-gold font-mono text-sm border-none outline-none text-ellipsis" />
-                                  <button onClick={() => copyToClipboard(inviteLink)} className="bg-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-600 font-bold border border-gray-600">Copy</button>
+                          <div className="bg-black bg-opacity-30 p-4 rounded text-center space-y-4">
+                              {/* New: Display Raw Code */}
+                              <div>
+                                  <p className="text-xs text-gray-500 uppercase mb-1">Lobby Code</p>
+                                  <div className="flex items-center justify-center gap-2">
+                                      <span className="font-mono text-xl text-gold tracking-wider select-all cursor-pointer hover:text-white transition-colors" onClick={() => copyToClipboard(myPeerId)} title="Click to Copy">
+                                          {myPeerId}
+                                      </span>
+                                  </div>
+                              </div>
+
+                              {/* Link */}
+                              <div>
+                                  <p className="text-xs text-gray-500 uppercase mb-1">Invite Link</p>
+                                  <div className="flex items-center gap-2 bg-void-dark p-1 rounded border border-gray-700">
+                                      <input 
+                                        readOnly 
+                                        value={inviteLink} 
+                                        onClick={(e) => e.currentTarget.select()}
+                                        className="flex-1 bg-transparent text-gray-400 font-mono text-xs border-none outline-none text-ellipsis px-2" 
+                                      />
+                                      <button onClick={() => copyToClipboard(inviteLink)} className="bg-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-600 font-bold border border-gray-600 text-white">
+                                          Copy
+                                      </button>
+                                  </div>
                               </div>
                           </div>
                           
